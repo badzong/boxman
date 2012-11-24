@@ -1,0 +1,47 @@
+#!/bin/sh
+
+LIB=/usr/local/lib/boxman
+FUNCTIONS=$LIB/functions.sh
+
+if test -z "$BOXMAN_PATH"; then
+	BOXMAN_PATH="$HOME/.boxman ./bin $LIB"
+fi
+
+CMD=$1
+HOST=$2
+
+shift 2
+CMD_ARGS=$*
+
+# Usage
+test -n "$CMD" || die Usage: $0 command
+
+# Load functions
+. $FUNCTIONS
+
+# Get command path
+COMMAND=$(cmd_path $CMD)
+
+if test -z $COMMAND; then
+	echo $CMD: command does not exists
+	echo
+	echo BOXMAN_PATH=$BOXMAN_PATH
+	exit 255
+fi
+
+# Load command
+. $COMMAND
+
+# Set MANAGE_CHAIN to command if empty
+if test -z "$MANAGE_CHAIN"; then
+	MANAGE_CHAIN=$CMD
+fi
+
+# Execute all commands in chain
+for CMD in $MANAGE_CHAIN; do
+
+	# Unset applied classes in each run
+	GLOBAL_CLASSES=
+
+	manage_command $CMD
+done
