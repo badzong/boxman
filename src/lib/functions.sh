@@ -37,11 +37,19 @@ warn()
 
 msg()
 {
+	if test -n "$QUIET"; then
+		return
+	fi
+
 	echo -e "$GREEN>>>$NORM" $*
 }
 
 debug()
 {
+	if test -n "$QUIET"; then
+		return
+	fi
+
 	echo -e "$BLUE>>>$NORM" $*
 }
 
@@ -51,6 +59,12 @@ ask()
 	read YES
 
 	test "yes" = "$YES"
+}
+
+get_hosts()
+{
+	cd $HOST_BASE
+	ls
 }
 
 cmd_path()
@@ -95,6 +109,17 @@ remote_tempdir()
 	else
 		echo $TEMPLATE
 	fi
+}
+
+remote_script()
+{
+	test -n "$1" || die Usage: remote_script script
+
+	REMOTE=$(remote_tempdir)/$1
+
+	remote_copy $1 $REMOTE
+	remote sh -e $REMOTE
+	remote_rmtempdir
 }
 
 sync_dirs()

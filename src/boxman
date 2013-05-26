@@ -3,12 +3,16 @@
 LIB=INSTALL_LIB
 FUNCTIONS=$LIB/functions.sh
 
+if test -n "$CWD"; then
+	cd $CWD
+fi
+
 if test -z "$BOXMAN_PATH"; then
 	BOXMAN_PATH="$HOME/.boxman ./bin $LIB"
 fi
 
 CMD=$1
-HOST=$2
+HOSTS=$2
 
 shift 2
 CMD_ARGS=$*
@@ -37,11 +41,25 @@ if test -z "$MANAGE_CHAIN"; then
 	MANAGE_CHAIN=$CMD
 fi
 
+# Load hosts if ALL was supplied
+if test -z "$HOSTS"; then
+	HOSTS=NONE
+elif test "$HOSTS" = "ALL"; then
+	HOSTS=$(get_hosts)
+	debug HOSTS: $HOSTS
+fi
+
 # Execute all commands in chain
-for CMD in $MANAGE_CHAIN; do
+for HOST in $HOSTS; do
+	if test "$HOST" = "NONE"; then
+		unset HOST
+	fi
 
-	# Unset applied classes in each run
-	GLOBAL_CLASSES=
+	for CMD in $MANAGE_CHAIN; do
 
-	manage_command $CMD
+		# Unset applied classes in each run
+		GLOBAL_CLASSES=
+
+		manage_command $CMD
+	done
 done
